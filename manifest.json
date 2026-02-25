@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Workday Helper",
+  "version": "0.2.0",
+  "description": "Automates repetitive Workday tasks — time entry, Quick Add, and more.",
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://*.myworkday.com/*"
+  ],
+  "action": {
+    "default_title": "Workday Helper"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.myworkday.com/*"
+      ],
+      "all_frames": true,
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

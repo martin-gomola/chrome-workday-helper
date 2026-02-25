@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workday Helper — Options</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1a1a1a;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #0d3a5d;
+      color: #fff;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar span { opacity: 0.6; font-weight: 400; font-size: 13px; }
+
+    .container {
+      max-width: 720px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #eee;
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    .card-body {
+      padding: 20px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+    .field:last-child { margin-bottom: 0; }
+
+    .field label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .field input[type="url"],
+    .field input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field input:focus {
+      border-color: #11507f;
+      box-shadow: 0 0 0 3px rgba(17, 80, 127, 0.12);
+    }
+
+    .field .description {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .row .field { flex: 1; }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 9px 22px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary {
+      background: #11507f;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #0d3a5d; }
+
+    .toast {
+      font-size: 13px;
+      color: #2e7d32;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .toast.show { opacity: 1; }
+
+    .info-table {
+      width: 100%;
+      font-size: 13px;
+      border-collapse: collapse;
+    }
+    .info-table td {
+      padding: 8px 0;
+      vertical-align: top;
+    }
+    .info-table td:first-child {
+      font-weight: 600;
+      color: #555;
+      width: 160px;
+      white-space: nowrap;
+    }
+    .info-table td:last-child {
+      color: #333;
+    }
+    .info-table tr + tr td {
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .kbd {
+      display: inline-block;
+      background: #f0f2f5;
+      border: 1px solid #d0d5dd;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    Workday Helper
+    <span>Options</span>
+  </div>
+
+  <div class="container">
+    <h1>Options</h1>
+    <p class="subtitle">Configure your Workday connection and extension behavior.</p>
+
+    <div class="card">
+      <div class="card-header">Workday Connection</div>
+      <div class="card-body">
+        <div class="field">
+          <label for="workday-url">Company Workday URL</label>
+          <input id="workday-url" type="url"
+                 placeholder="https://wd5.myworkday.com/yourcompany">
+          <p class="description">
+            The base URL you use to access Workday. Paste everything up to and including your
+            company/tenant name. Used as a fallback if the Time page URL is not set.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="time-page-url">Time Page URL</label>
+          <input id="time-page-url" type="url"
+                 placeholder="https://wd5.myworkday.com/yourcompany/d/inst/.../cacheable-task/...">
+          <p class="description">
+            Direct link to your Time page. In Workday, go to <strong>Menu → Personal → Time</strong>,
+            right-click <strong>Time</strong> and copy the link, then paste it here.
+            Clicking the extension icon will open this page directly.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="save">Save</button>
+          <span class="toast" id="toast">Settings saved!</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Workday Schedule (Mon–Fri)</div>
+      <div class="card-body">
+        <p class="description" style="margin-bottom: 14px;">
+          Two blocks are added per workday — morning and evening around your work hours.
+        </p>
+        <p style="font-weight: 600; font-size: 12px; color: #666; margin-bottom: 6px;">Block 1 — Morning</p>
+        <div class="row">
+          <div class="field">
+            <label for="wd-block1-in">In</label>
+            <input id="wd-block1-in" type="text" placeholder="00:00">
+          </div>
+          <div class="field">
+            <label for="wd-block1-out">Out</label>
+            <input id="wd-block1-out" type="text" placeholder="08:59">
+          </div>
+        </div>
+        <p style="font-weight: 600; font-size: 12px; color: #666; margin-bottom: 6px;">Block 2 — Evening</p>
+        <div class="row">
+          <div class="field">
+            <label for="wd-block2-in">In</label>
+            <input id="wd-block2-in" type="text" placeholder="17:00">
+          </div>
+          <div class="field">
+            <label for="wd-block2-out">Out</label>
+            <input id="wd-block2-out" type="text" placeholder="23:59">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Weekend Schedule (Sat–Sun)</div>
+      <div class="card-body">
+        <p class="description" style="margin-bottom: 14px;">
+          One block covers the entire weekend day.
+        </p>
+        <div class="row">
+          <div class="field">
+            <label for="we-in">In</label>
+            <input id="we-in" type="text" placeholder="00:00">
+          </div>
+          <div class="field">
+            <label for="we-out">Out</label>
+            <input id="we-out" type="text" placeholder="23:59">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">How to Use</div>
+      <div class="card-body">
+        <table class="info-table">
+          <tr>
+            <td>Extension icon</td>
+            <td>Click to open your Workday Quick Add page directly.</td>
+          </tr>
+          <tr>
+            <td>Right-click icon</td>
+            <td>Choose <strong>Open Workday Quick Add</strong> from the context menu.</td>
+          </tr>
+          <tr>
+            <td>On Workday page</td>
+            <td>When Quick Add is open, a floating panel appears with buttons for
+                <strong>Select Standby Type</strong>, <strong>Add Workdays</strong>,
+                <strong>Add Weekend</strong>, and <strong>Clear Empty Rows</strong>.</td>
+          </tr>
+          <tr>
+            <td>After automation</td>
+            <td>Review the filled entries, then click <strong>OK</strong> manually to submit.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">About</div>
+      <div class="card-body">
+        <table class="info-table">
+          <tr>
+            <td>Version</td>
+            <td id="version"></td>
+          </tr>
+          <tr>
+            <td>Source</td>
+            <td><a href="https://github.com/martin-gomola/chrome-workday-helper"
+                   target="_blank" rel="noopener noreferrer">GitHub</a></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
