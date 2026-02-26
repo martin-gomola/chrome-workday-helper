@@ -218,15 +218,18 @@
       font-size: 12px; color: #9ca3af; margin-top: 2px; line-height: 1.4;
     }
     #${PANEL_ID} .wd-action-arrow { color: #6b7280; font-size: 18px; flex-shrink: 0; }
-    #${PANEL_ID} .wd-util {
-      display: flex; justify-content: center; padding: 2px 0;
+    #${PANEL_ID} .wd-util-row {
+      display: flex; align-items: center; justify-content: center; gap: 0; padding: 2px 0;
     }
-    #${PANEL_ID} .wd-util button {
+    #${PANEL_ID} .wd-util-row button {
       background: none; border: none; color: #6b7280; font: inherit;
       font-size: 12px; cursor: pointer; padding: 5px 10px; border-radius: 6px;
       transition: color 0.15s, background 0.15s;
     }
-    #${PANEL_ID} .wd-util button:hover { color: #d1d5db; background: rgba(255,255,255,0.06); }
+    #${PANEL_ID} .wd-util-row button:hover { color: #d1d5db; background: rgba(255,255,255,0.06); }
+    #${PANEL_ID} .wd-util-sep {
+      width: 1px; height: 12px; background: rgba(255,255,255,0.12); flex-shrink: 0;
+    }
     #${PANEL_ID} .wd-status {
       margin: 2px 2px 4px; padding: 10px 12px; border-radius: 8px;
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
@@ -281,12 +284,32 @@
     return deepElements(document).some(
       (el) =>
         el.getAttribute("data-automation-id") === "pageHeaderTitleText" &&
-        /^Enter Time$/i.test(normalizedText(el))
+        /^Enter (My )?Time$/i.test(normalizedText(el))
     );
   }
 
+  function isTimeLandingPage() {
+    if (isEnterTimePage() || isQuickAddContext()) return false;
+    return !!findByText(/^Enter (My )?Time$/i, { root: document }) &&
+           !!findByText(/This Week/i, { root: document, clickableOnly: true });
+  }
+
+  function findThisWeekElement() {
+    return findByText(/This Week/i, { root: document, clickableOnly: true });
+  }
+
+  function findEnterTimeUrl() {
+    const el = findThisWeekElement();
+    if (!el) return null;
+    const link = el.tagName === "A" ? el : el.closest("a");
+    if (link && link.href) return link.href;
+    const child = el.querySelector && el.querySelector("a[href]");
+    if (child) return child.href;
+    return null;
+  }
+
   function shouldShowPanel() {
-    return isQuickAddContext() || isEnterTimePage();
+    return isQuickAddContext() || isEnterTimePage() || isTimeLandingPage();
   }
 
   function isStandbySelected(root) {
@@ -1118,6 +1141,45 @@
     }
   }
 
+  async function runEnterThisWeek() {
+    if (isRunning) return;
+    isRunning = true;
+    try {
+      setStatus("Opening This Week\u2026", "busy");
+      const el = findThisWeekElement();
+      if (!el) {
+        setStatus("Could not find This Week button.", "err");
+        return;
+      }
+      clickElement(el);
+      setStatus("Navigating\u2026", "busy");
+    } catch (error) {
+      setStatus("Failed: " + formatError(error), "err");
+    } finally {
+      isRunning = false;
+    }
+  }
+
+  async function runSaveEnterTimeUrl() {
+    if (isRunning) return;
+    isRunning = true;
+    try {
+      setStatus("Saving Enter Time URL\u2026", "busy");
+      const url = isEnterTimePage() ? window.location.href : findEnterTimeUrl();
+      if (!url) {
+        setStatus("Could not find time entry URL.", "err");
+        return;
+      }
+      chrome.storage.sync.set({ timePageUrl: url }, () => {
+        setStatus("Saved! Extension icon now opens this page.", "ok");
+      });
+    } catch (error) {
+      setStatus("Failed: " + formatError(error), "err");
+    } finally {
+      isRunning = false;
+    }
+  }
+
   function buildTimeDesc(keys) {
     const d = DEFAULT_TIMES;
     if (keys.length === 4) {
@@ -1144,7 +1206,15 @@
         <button type="button" class="wd-toggle" aria-label="Collapse panel" title="Collapse">−</button>
       </div>
       <div class="wd-body">
-        <div class="wd-action" data-flow="workdays" tabindex="0" role="button">
+        <div class="wd-action wd-landing-action" data-flow="this-week" tabindex="0" role="button">
+          <div class="wd-action-icon wd-weekday">T</div>
+          <div class="wd-action-info">
+            <div class="wd-action-title">Enter This Week</div>
+            <div class="wd-action-desc">Open weekly time entry view</div>
+          </div>
+          <div class="wd-action-arrow">›</div>
+        </div>
+        <div class="wd-action wd-quickadd-action" data-flow="workdays" tabindex="0" role="button">
           <div class="wd-action-icon wd-weekday">W</div>
           <div class="wd-action-info">
             <div class="wd-action-title">Workdays</div>
@@ -1152,7 +1222,7 @@
           </div>
           <div class="wd-action-arrow">›</div>
         </div>
-        <div class="wd-action" data-flow="weekend" tabindex="0" role="button">
+        <div class="wd-action wd-quickadd-action" data-flow="weekend" tabindex="0" role="button">
           <div class="wd-action-icon wd-weekend">S</div>
           <div class="wd-action-info">
             <div class="wd-action-title">Weekend</div>
@@ -1160,8 +1230,10 @@
           </div>
           <div class="wd-action-arrow">›</div>
         </div>
-        <div class="wd-util">
-          <button type="button" data-flow="clear">Clear empty rows</button>
+        <div class="wd-util-row">
+          <button type="button" class="wd-quickadd-action" data-flow="clear">Clear empty rows</button>
+          <div class="wd-util-sep wd-quickadd-action"></div>
+          <button type="button" data-flow="save-url">Set as Quick Link</button>
         </div>
         <div class="wd-status" role="status" aria-live="polite">Ready</div>
       </div>
@@ -1184,6 +1256,8 @@
     header.addEventListener("click", (e) => {
       if (panel.classList.contains("wd-collapsed") && !e.target.closest(".wd-toggle")) setCollapsed(false);
     });
+    panel.querySelector("[data-flow='this-week']").addEventListener("click", runEnterThisWeek);
+    panel.querySelector("[data-flow='save-url']").addEventListener("click", runSaveEnterTimeUrl);
     panel.querySelector("[data-flow='workdays']").addEventListener("click", runWorkdaysFlow);
     panel.querySelector("[data-flow='weekend']").addEventListener("click", runWeekendFlow);
     panel.querySelector("[data-flow='clear']").addEventListener("click", runClearEmptyRows);
@@ -1196,6 +1270,7 @@
       if (wdDesc) wdDesc.textContent = `Mon–Fri · ${t.wdBlock1In} – ${t.wdBlock1Out}  &  ${t.wdBlock2In} – ${t.wdBlock2Out}`;
       if (weDesc) weDesc.textContent = `Sat–Sun · ${t.weekendIn} – ${t.weekendOut}`;
     });
+
   }
 
   function removePanel() {
@@ -1203,9 +1278,22 @@
     if (panel) panel.remove();
   }
 
+  function updatePanelActions() {
+    const panel = document.getElementById(PANEL_ID);
+    if (!panel) return;
+    const landing = isTimeLandingPage();
+    panel.querySelectorAll(".wd-landing-action").forEach((el) => {
+      el.style.display = landing ? "" : "none";
+    });
+    panel.querySelectorAll(".wd-quickadd-action").forEach((el) => {
+      el.style.display = landing ? "none" : "";
+    });
+  }
+
   function syncPanel() {
     if (shouldShowPanel()) {
       injectPanel();
+      updatePanelActions();
     } else {
       removePanel();
     }
