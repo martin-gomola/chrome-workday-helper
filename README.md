@@ -1,6 +1,8 @@
 # Workday Helper (Chrome Extension)
 
-Manifest V3 Chrome extension that automates repetitive Workday tasks — starting with time entry Quick Add.
+Manifest V3 Chrome extension that automates repetitive Workday tasks - starting with time entry Quick Add.
+
+![Workday Helper preview](docs/chrome-workday-helper.png)
 
 ## Features
 
