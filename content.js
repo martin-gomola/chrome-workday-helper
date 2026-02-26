@@ -1170,8 +1170,11 @@
         setStatus("Could not find time entry URL.", "err");
         return;
       }
-      chrome.storage.sync.set({ timePageUrl: url }, () => {
-        setStatus("Saved! Extension icon now opens this page.", "ok");
+      await new Promise((resolve) => {
+        chrome.storage.sync.set({ timePageUrl: url }, () => {
+          setStatus("Saved! Extension icon now opens this page.", "ok");
+          resolve();
+        });
       });
     } catch (error) {
       setStatus("Failed: " + formatError(error), "err");
